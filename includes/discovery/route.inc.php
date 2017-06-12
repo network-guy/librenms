@@ -25,7 +25,9 @@ $ids = array();
 // For the moment only will be cisco and the version 3
 if ($device['os_group'] == "cisco") {
     //RFC1213-MIB
-    $mib = "RFC1213-MIB";
+    //$mib = "RFC1213-MIB";
+    //IP-FORWARD-MIB
+    $mib = "IP-FORWARD-MIB";
     //IpRouteEntry
     $vrfs_lite_cisco = array();
 
@@ -46,7 +48,7 @@ if ($device['os_group'] == "cisco") {
         $device['context_name'] = $vrf_lite['context_name'];
 
         ////////////////ipRouteDest//////////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.1';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.1';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
@@ -57,7 +59,7 @@ if ($device['os_group'] == "cisco") {
         }
 
         /////////////////ipRouteIfIndex//////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.2';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.5';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
@@ -68,7 +70,7 @@ if ($device['os_group'] == "cisco") {
         }
 
         ///////////////ipRouteMetric1///////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.3';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.11';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
@@ -79,7 +81,7 @@ if ($device['os_group'] == "cisco") {
         }
 
         ////////////ipRouteNextHop//////////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.7';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.4';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
@@ -89,7 +91,7 @@ if ($device['os_group'] == "cisco") {
         }
 
         ////////////ipRouteType/////////////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.8';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.6';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
@@ -100,11 +102,11 @@ if ($device['os_group'] == "cisco") {
         }
 
         ///////////ipRouteProto//////////////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.9';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.7';
         $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);
-
+        $resultHelp = str_replace("netmgmt", "static", $resultHelp);
 
         foreach (explode("\n", $resultHelp) as $ipRouteProto) {
             list($ip, $value) = explode(" ", $ipRouteProto);
@@ -113,7 +115,7 @@ if ($device['os_group'] == "cisco") {
 
         /*
           ///////////ipRouteAge//////////////////////
-          $oid = '.1.3.6.1.2.1.4.21.1.10';
+          $oid = '.1.3.6.1.2.1.4.24.4.1.8';
           $resultHelp = snmp_walk($device, $oid, "-Osqn", $mib, NULL);
           $resultHelp = str_replace("$oid.", "", $resultHelp);
 
@@ -123,7 +125,7 @@ if ($device['os_group'] == "cisco") {
           } */
 
         ///////////ipRouteMask//////////////////////
-        $oid = '.1.3.6.1.2.1.4.21.1.11';
+        $oid = '.1.3.6.1.2.1.4.24.4.1.2';
         $resultHelp = snmp_walk($device, $oid, "-Osqn -Ln", $mib, null);
         $resultHelp = trim($resultHelp);
         $resultHelp = str_replace("$oid.", "", $resultHelp);

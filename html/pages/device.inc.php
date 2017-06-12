@@ -231,6 +231,11 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
             $routing_tabs[] = 'ipsec_tunnels';
         }
 
+        $device_routing_count['ipv4'] = dbFetchCell('SELECT COUNT(*) FROM `route` WHERE `device_id` = ?', array($device['device_id']));
+        if ($device_routing_count['ipv4']) {
+             $routing_tabs[] = 'ipv4';
+        }
+
         $device_routing_count['bgp'] = dbFetchCell('SELECT COUNT(*) FROM `bgpPeers` WHERE `device_id` = ?', array($device['device_id']));
         if ($device_routing_count['bgp']) {
             $routing_tabs[] = 'bgp';

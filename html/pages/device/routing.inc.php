@@ -16,6 +16,7 @@ $type_text['loadbalancer_vservers'] = 'Serverfarms';
 // Citrix Netscaler
 $type_text['netscaler_vsvr'] = 'VServers';
 
+$type_text['ipv4'] = 'IPv4';
 $type_text['bgp']  = 'BGP';
 $type_text['cef']  = 'CEF';
 $type_text['ospf'] = 'OSPF';
