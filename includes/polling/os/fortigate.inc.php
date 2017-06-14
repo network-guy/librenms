@@ -40,3 +40,49 @@ if (is_numeric($cpu_usage)) {
     data_update($device, 'fortigate_cpu', $tags, $fields);
     $graphs['fortigate_cpu'] = true;
 }
+
+$ssl_traffic_in = snmp_get($device, 'fgVpnSslTunnelBytesIn', '-OQv', 'FORTINET-FORTIGATE-MIB');
+if ($ssl_traffic_in) {
+    foreach ($ssl_traffic_in as $octets) {
+        $ssl_traffic_in_octets += $octets;
+    }
+}
+
+$ssl_traffic_out = snmp_get($device, 'fgVpnSslTunnelBytesOut', '-OQv', 'FORTINET-FORTIGATE-MIB');
+if ($ssl_traffic_out) {
+    foreach ($ssl_traffic_out as $octets) {
+        $ssl_traffic_out_octets += $octets;
+    }
+}
+
+if (is_numeric($ssl_traffic_in_octets) & is_numeric($ssl_traffic_out_octets)) {
+    $rrd_def = RrdDefinition::make()
+        ->addDataset('InOctets', 'GAUGE', 0)
+        ->addDataset('OutOctets', 'GAUGE', 0);
+
+    $fields = array(
+        'InOctets' => $in_octets,
+        'OutOctets' => $out_octets,
+    );
+
+    $tags = compact('rrd_def');
+    data_update($device, 'fortigate_ssl_traffic', $tags, $fields);
+
+    $graphs['fortigate_ssl_traffic'] = true;
+    echo 'SSLVPN Tunnel Bandwidth';
+}
+
+$ssl_tunnels = snmp_get($device, 'fgVpnSslStatsActiveTunnels', '-OQv', 'FORTINET-FORTIGATE-MIB');
+
+$rrd_def = RrdDefinition::make()
+    ->addDataset('Tunnels', 'GAUGE', 0);
+
+$fields = array(
+    'Tunnels' => array_sum($ssl_tunnels),
+);
+
+$tags = compact('rrd_def');
+data_update($device, 'fortigate_ssl_tunnels', $tags, $fields);
+
+$graphs['fortigate_ssl_tunnels'] = true;
+echo 'SSLVPN Active Tunnels';
