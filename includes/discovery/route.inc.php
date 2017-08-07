@@ -28,24 +28,20 @@ if ($device['os_group'] == "cisco") {
     //$mib = "RFC1213-MIB";
     //IP-FORWARD-MIB
     $mib = "IP-FORWARD-MIB";
-    //IpRouteEntry
-    $vrfs_lite_cisco = array();
 
-    if (key_exists('vrf_lite_cisco', $device) && (count($device['vrf_lite_cisco']) != 0)) {
-        //i will only get one context of vrf, read the begin of this file
-        foreach ($device['vrf_lite_cisco'] as $vrf_lite) {
-            if (!key_exists($vrf_lite['vrf_name'], $vrfs_lite_cisco)) {
-                $vrfs_lite_cisco[$vrf_lite['vrf_name']] = $vrf_lite;
-            }
-        }
-    } else {
-        $vrfs_lite_cisco = array(array('context_name' => null));
+    // initialize context list array, add global context
+    $device_contexts = array(array('context_name' => '', 'vrf_name' => 'global'));
+//    $device_contexts = array();
+
+    // pull contexts from database and add to context array
+    foreach (dbFetchRows('SELECT `context_name`, `vrf_name` FROM `vrf_lite_cisco` WHERE `device_id` = ? ORDER BY `context_name` ASC', array($device['device_id'])) as $contexts) {
+        array_push($device_contexts, $contexts);
     }
 
     $tableRoute = array();
 
-    foreach ($vrfs_lite_cisco as $vrf_lite) {
-        $device['context_name'] = $vrf_lite['context_name'];
+    foreach($device_contexts as $context) {
+        $device['context_name'] = $context['context_name'];
 
         ////////////////ipRouteDest//////////////////
         $oid = '.1.3.6.1.2.1.4.24.4.1.1';
@@ -139,6 +135,8 @@ if ($device['os_group'] == "cisco") {
             echo 'Table routage';
             var_dump($tableRoute);
         }
+ 
+        $vrf = $context['vrf_name'];
 
         foreach ($tableRoute as $ipRoute) {
             if (empty($ipRoute['ipRouteDest']) || $ipRoute['ipRouteDest'] == '') {
@@ -155,15 +153,20 @@ if ($device['os_group'] == "cisco") {
                     }
                 }
                 if (!empty($changeRoute)) {
-                    dbUpdate($changeRoute, 'route', 'device_id = ? and ipRouteDest = ? and context_name = ?', array($device['device_id'], $ipRoute['ipRouteDest'], $device['context_name']));
+                    dbUpdate($changeRoute, 'route', 'device_id = ? and ipRouteDest = ? and context_name = ? and vrf = ?', array($device['device_id'], $ipRoute['ipRouteDest'], $device['context_name'], $vrf));
                 }
             } else {
-                $toInsert = array_merge($ipRoute, array('device_id' => $device['device_id'], 'context_name' => $device['context_name'], 'discoveredAt' => time()));
+                $toInsert = array_merge($ipRoute, array('device_id' => $device['device_id'], 'context_name' => $device['context_name'], 'vrf' => $vrf, 'discoveredAt' => time()));
                 dbInsert($toInsert, 'route');
             }
         }
-        // unset($tableRoute);
+    } //end context for loop
+
+    //cleanup routes for missing contexts
+    foreach (dbFetchRow('SELECT DISTINCT `context_name` FROM `route` WHERE `device_id` = ?', array($device['device_id'])) as $db_context) {
+        if ($db_context['context_name'] != '' && !array_search($db_context['context_name'], $device_contexts)) {
+            dbDelete('route', '`context_name` = ? AND `device_id` = ?', array($db_context['context_name'], $device['device_id']));
+        }
     }
 
-    unset($vrfs_lite_cisco);
-}
+} //end if statement

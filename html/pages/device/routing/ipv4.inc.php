@@ -7,65 +7,63 @@ $link_array = array(
                'proto'  => 'ipv4',
               );
 
-//echo(generate_link("Basic", $link_array,array('view'=>'basic')));
-if (!isset($vars['view'])) {
-    $vars['view'] = 'basic';
+$vrfs = dbFetchRows("SELECT DISTINCT `vrf` FROM `route` WHERE `device_id` = ? ORDER BY `vrf` ASC", array($device['device_id']));
+
+if (!isset($vars['vrf'])) {
+    $vars['vrf'] = $vrfs[0]['vrf'];
 }
 
 print_optionbar_start();
 
-echo "<span style='font-weight: bold;'>Routing Table</span> &#187; ";
+echo "<span style='font-weight: bold;'>VRF</span> &#187; ";
 
-$menu_options = array('basic' => 'Basic',
-// 'detail' => 'Detail',
-                );
-
-if (!$_GET['opta']) {
-    $_GET['opta'] = 'basic';
+$menu_options = array();
+foreach($vrfs as $vrf) {
+    $menu_options[$vrf['vrf']] = $vrf['vrf'];
 }
 
-$sep = '';
 foreach ($menu_options as $option => $text) {
-    if ($vars['view'] == $option) {
+    if ($vars['vrf'] == $option) {
         echo "<span class='pagemenu-selected'>";
     }
 
-    echo generate_link($text, $link_array, array('view' => $option));
-    if ($vars['view'] == $option) {
+    echo generate_link($text, $link_array, array('vrf' => $option));
+    if ($vars['vrf'] == $option) {
         echo '</span>';
     }
 
     echo ' | ';
 }
 
-unset($sep);
-
 print_optionbar_end();
 
-echo "<div style='margin: 5px;'><table border=0 cellspacing=0 cellpadding=5 width=100%>";
-echo '<tr style="height: 30px"><th>IPv4 Prefix</th><th>Netmask</th><th>Next Hop</th><th>Protocol</th><th>Interface</th></tr>';
+$no_refresh = true;
+?>
+<table id="route_ipv4" class="table table-condensed table-hover table-striped">
+    <thead>
+        <tr>
+            <th data-column-id="ipRouteDest">Destination</th>
+            <th data-column-id="ipRouteMask">Mask</th>
+            <th data-column-id="ipRouteNextHop">Next Hop</th>
+            <th data-column-id="ipRouteProto">Protocol</th>
+            <th data-column-id="ipRouteMetric">Metric</th>
+            <th data-column-id="interface">Interface</th>
+        </tr>
+    </thead>
+</table>
 
-if (!isset($vars['startrow']) and !is_numeric($vars['startrow'])) {
-    $startrow = 0;
-} else {
-    $startrow = (int)$vars['startrow'];
-}
+<script>
 
-$i = 0;
-
-foreach (dbFetchRows("SELECT * FROM `route` WHERE `device_id` = ? ORDER BY `ipRouteDest` LIMIT $startrow, 25", array($device['device_id'])) as $routes) {
-    include 'includes/print-routes.inc.php';
-
-    $i++;
-}
-
-echo '</table></div>';
-
-$prev = $startrow - 25;
-if ($prev >= 0) {
-    echo (generate_link("Previous", $link_array, array('startrow'=>($prev))));
-}
-
-echo "  ";
-
-echo (generate_link("Next", $link_array, array('startrow'=>($startrow+25))));
+var grid = $("#route_ipv4").bootgrid({
+    ajax: true,
+    post: function ()
+    {
+       return {
+            id: "route-ipv4",
+            device_id: "<?php echo $device['device_id']; ?>",
+            vrf: "<?php echo $vars['vrf']; ?>",
+        };
+    },
+    url: "ajax_table.php"
+});
+</script>
